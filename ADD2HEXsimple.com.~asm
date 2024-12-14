@@ -1,0 +1,13 @@
+org 100h
+
+mov ax, 0050h
+mov bx, 00FFh
+add ax, bx
+
+mov ah, 4Ch
+int 21h
+
+
+
+
+; [SOURCE]: C:\emu8086\MySource\ADD2HEXsimple.asm

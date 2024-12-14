@@ -1,0 +1,26 @@
+< THE SYMBOL TABLE >  ADD2NOKBmycode.exe_  --  emu8086 assembler version: 4.08 
+===================================================================================================
+Name                     	Offset    	Size      	Type      	Segment   
+===================================================================================================
+STACK                    	00000     	-5        	SEGMENT   	(ITSELF)  
+DATA                     	00010     	-5        	SEGMENT   	(ITSELF)  
+BUFFER1                  	00000     	1         	VAR       	data      
+BUFFER2                  	00007     	1         	VAR       	data      
+MSG1                     	0000E     	1         	VAR       	data      
+MSG2                     	00025     	1         	VAR       	data      
+MSG3                     	0003F     	1         	VAR       	data      
+OUTBUFFER                	00051     	1         	VAR       	data      
+CODE                     	00016     	-5        	SEGMENT   	(ITSELF)  
+MAIN                     	00000     	-1        	NEAR      	code      
+CONVERTASCIITONUMBER     	00048     	-1        	NEAR      	code      
+CONVLOOP                 	00058     	-1        	LABEL     	code      
+DONECONV                 	00071     	-1        	LABEL     	code      
+CONVERTNUMBERTOASCII     	00075     	-1        	NEAR      	code      
+EXTRACTDIGITS            	0008F     	-1        	LABEL     	code      
+NEXTDIGIT                	0008F     	-1        	LABEL     	code      
+WRITEDIGITS              	0009A     	-1        	LABEL     	code      
+WRITETERMINATOR          	000A3     	-1        	LABEL     	code      
+===================================================================================================
+[ 12/14/2024  --  4:28:03 PM ] 
+< END >
+ 

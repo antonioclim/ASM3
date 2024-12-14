@@ -1,0 +1,90 @@
+EMU8086 GENERATED LISTING. MACHINE CODE <- SOURCE.
+ 
+1roADD2HEX+printHEX.com -- emu8086 assembler version: 4.08  
+ 
+[ 12/14/2024  --  5:37:03 PM ] 
+ 
+===================================================================================================
+[LINE]     LOC: MACHINE CODE                          SOURCE
+===================================================================================================
+ 
+[   1]        :                                       org 100h ; Seteaz? punctul de origine la 0x100. Într-un fi?ier .com, execu?ia începe la aceast? adres?.
+[   2]        :                                       
+[   3]        :                                       ; INCARCAM VALORILE
+[   4]        :                                       
+[   5]    0100: B8 50 00                              mov ax, 0050h ; AX = 0x0050. Ini?ial, nu ?tim con?inutul registrului AX, dar dup? aceast? instruc?iune, AX con?ine exact 80 (decimal).
+[   6]        :                                       
+[   7]    0103: BB FF 00                              mov bx, 00FFh ; BX = 0x00FF. Similar, aceasta pune valoarea 255 în BX. Înainte de aceast? instruc?iune, con?inutul lui BX nu era definit pentru program.
+[   8]        :                                       ; Acum avem: AX = 0x0050 (80), BX = 0x00FF (255).
+[   9]        :                                       
+[  10]    0106: 03 C3                                 add ax, bx ; Efectueaz? AX = AX + BX. AX era 80, BX era 255, deci AX devine 335 în decimal, adic? 0x014F în hex. Dup? aceast? instruc?iune: AX = 0x014F.
+[  11]        :                                       
+[  12]        :                                       ; COD ADITIONAL PENTRU TRANSFORMARE REZULTAT (014Fh) ..in hex
+[  13]        :                                       
+[  14]        :                                       ; Nibble 1 (cel mai semnificativ)
+[  15]    0108: 50                                    push ax ; salveaz? AX pe stiv?, pentru c? dup? shr vrem s? restaur?m valoarea original? a lui AX.
+[  16]        :                                       
+[  17]    0109: D1 E8 D1 E8 D1 E8 D1 E8 D1 E8 D1 E8   shr ax, 12       ; deplasam 12 biti la dreapta
+                D1 E8 D1 E8 D1 E8 D1 E8 D1 E8 D1 E8 
+                                                    
+[  18]    0121: E8 30 00                              call print_hex_digit
+[  19]    0124: 58                                    pop ax
+[  20]        :                                       
+[  21]        :                                       ; Nibble 2
+[  22]    0125: 50                                    push ax
+[  23]    0126: D1 E8 D1 E8 D1 E8 D1 E8 D1 E8 D1 E8   shr ax, 8 ; deplas?m con?inutul cu 8 bi?i. Acum nibble-ul care era în pozi?ia 11..8 se mut? la 3..0 (sfâr?itul lui AL).
+                D1 E8 D1 E8                         
+[  24]        :                                       
+[  25]    0136: 24 0F                                 and al, 0Fh ; masca 0x0F re?ine doar ultimii 4 bi?i, astfel ob?inem valoarea acelui nibble.
+[  26]        :                                       
+[  27]    0138: E8 19 00                              call print_hex_digit ; afi?eaz? nibble-ul.
+[  28]        :                                       
+[  29]    013B: 58                                    pop ax ; reface valoarea lui ax
+[  30]        :                                       
+[  31]        :                                       ; Nibble 3
+[  32]    013C: 50                                    push ax
+[  33]    013D: D1 E8 D1 E8 D1 E8 D1 E8               shr ax,4
+[  34]    0145: 24 0F                                 and al,0Fh
+[  35]    0147: E8 0A 00                              call print_hex_digit
+[  36]    014A: 58                                    pop ax
+[  37]        :                                       
+[  38]        :                                       ; Nibble 4
+[  39]    014B: 24 0F                                 and al,0Fh
+[  40]    014D: E8 04 00                              call print_hex_digit
+[  41]        :                                       
+[  42]        :                                       ;CONTINUAM CU INTRERUPEREA (revenim la codul initial)
+[  43]    0150: B4 4C                                 mov ah, 4Ch ; Seteaz? AH (partea superioar? a lui AX) la 0x4C. AX a fost modificat, dar acum ne intereseaz? doar AH, deoarece urm?toarea instruc?iune int 21h cite?te func?ia DOS din AH. AH=4Ch înseamn? "terminare program".
+[  44]        :                                       
+[  45]    0152: CD 21                                 int 21h ; Aceasta apeleaz? întreruperea DOS 21h. DOS verific? AH ?i vede func?ia 4Ch, care înseamn? "Terminate Program". Programul se încheie ?i controlul revine la sistem.
+[  46]        :                                       
+[  47]        :                                       ; REVENIM LA CODUL ADITIONAL PENTRU AFISARE REZULTAT (subrutina print_hex_digit
+[  48]        :                                       
+[  49]        :                                       ;------------------------------------------------------------
+[  50]        :                                       ; Subrutina: print_hex_digit
+[  51]        :                                       ; Intrare: AL contine nibble-ul (0-15)
+[  52]        :                                       ; Iesire: Afiseaza un caracter hex ('0'-'9','A'-'F')
+[  53]        :                                       ;------------------------------------------------------------
+[  54]    0154:                                       print_hex_digit:
+[  55]    0154: 3C 0A                                 cmp al,10
+[  56]    0156: 72 04                                 jb digit_less_than_a
+[  57]    0158: 04 37                                 add al,'A'-10
+[  58]    015A: EB 02                                 jmp print_done
+[  59]        :                                       
+[  60]    015C:                                       digit_less_than_a:
+[  61]    015C: 04 30                                 add al,'0'
+[  62]        :                                       
+[  63]    015E:                                       print_done:
+[  64]    015E: 8A D0                                 mov dl,al
+[  65]    0160: B4 02                                 mov ah,2
+[  66]    0162: CD 21                                 int 21h
+[  67]    0164: C3                                    ret
+[  68]        :                                       
+[  69]        :                                       
+ 
+===================================================================================================
+ 
+
+
+
+
+===================================================================================================

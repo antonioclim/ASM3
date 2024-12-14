@@ -1,0 +1,226 @@
+EMU8086 GENERATED LISTING. MACHINE CODE <- SOURCE.
+ 
+ADD2NOKBmycode.exe -- emu8086 assembler version: 4.08  
+ 
+[ 12/14/2024  --  4:24:07 PM ] 
+ 
+===================================================================================================
+[LINE]     LOC: MACHINE CODE                          SOURCE
+===================================================================================================
+ 
+[   1]        :                                       .MODEL SMALL
+[   2]        :                                       .STACK 100h
+[   3]        :                                       
+[   4]        :                                       .DATA
+[   5]    0100: 06 00 00 00 00 00 00                  buffer1 DB 6,0,0,0,0,0,0  ; primul numar (max 5 cifre)
+[   6]    0107: 06 00 00 00 00 00 00                  buffer2 DB 6,0,0,0,0,0,0  ; al doilea numar
+[   7]    010E: 49 6E 74 72 6F 64 75 20 70 72 69 6D   msg1 DB "Introdu primul numar: $"
+                75 6C 20 6E 75 6D 61 72 3A 20 24    
+[   8]    0125: 49 6E 74 72 6F 64 75 20 61 6C 20 64   msg2 DB "Introdu al doilea numar: $"
+                6F 69 6C 65 61 20 6E 75 6D 61 72 3A 
+                20 24                               
+[   9]    013F: 52 65 7A 75 6C 74 61 74 75 6C 20 65   msg3 DB "Rezultatul este: $"
+                73 74 65 3A 20 24                   
+[  10]    0151: 00 00 00 00 00 00 24                  outBuffer DB 6 DUP(?), '$'
+[  11]        :                                       
+[  12]        :                                       .CODE
+[  13]    0160:                                       MAIN PROC
+[  14]    0160: B8 10 00                              MOV AX, @DATA
+[  15]    0163: 8E D8                                 MOV DS, AX
+[  16]        :                                       
+[  17]        :                                       ; Afisare mesaj + citire primul numar
+[  18]    0165: BA 0E 00                              MOV DX, OFFSET msg1
+[  19]    0168: B4 09                                 MOV AH, 9
+[  20]    016A: CD 21                                 INT 21h
+[  21]        :                                       
+[  22]    016C: BA 00 00                              MOV DX, OFFSET buffer1
+[  23]    016F: B4 0A                                 MOV AH, 0Ah
+[  24]    0171: CD 21                                 INT 21h
+[  25]        :                                       
+[  26]        :                                       ; Convertim din ASCII in numar intreg (AX)
+[  27]    0173: BA 00 00                              MOV DX, OFFSET buffer1
+[  28]    0176: E8 2F 00                              CALL ConvertASCIIToNumber
+[  29]    0179: 8B D8                                 MOV BX, AX  ; salvam primul numar in BX
+[  30]        :                                       
+[  31]        :                                       ; Afisare mesaj + citire al doilea numar
+[  32]    017B: BA 25 00                              MOV DX, OFFSET msg2
+[  33]    017E: B4 09                                 MOV AH, 9
+[  34]    0180: CD 21                                 INT 21h
+[  35]        :                                       
+[  36]    0182: BA 07 00                              MOV DX, OFFSET buffer2
+[  37]    0185: B4 0A                                 MOV AH, 0Ah
+[  38]    0187: CD 21                                 INT 21h
+[  39]        :                                       
+[  40]        :                                       ; Convertim din ASCII in numar intreg (AX)
+[  41]    0189: BA 07 00                              MOV DX, OFFSET buffer2
+[  42]    018C: E8 19 00                              CALL ConvertASCIIToNumber
+[  43]    018F: 03 C3                                 ADD AX, BX   ; AX = AX + BX (suma finala)
+[  44]        :                                       
+[  45]        :                                       ; Convertim numarul din AX in ASCII (outBuffer)
+[  46]    0191: 50                                    PUSH AX
+[  47]    0192: E8 40 00                              CALL ConvertNumberToASCII
+[  48]    0195: 58                                    POP AX
+[  49]        :                                       
+[  50]        :                                       ; Afisare mesaj rezultat
+[  51]    0196: BA 3F 00                              MOV DX, OFFSET msg3
+[  52]    0199: B4 09                                 MOV AH, 9
+[  53]    019B: CD 21                                 INT 21h
+[  54]        :                                       
+[  55]        :                                       ; Afisare rezultat
+[  56]    019D: BA 51 00                              MOV DX, OFFSET outBuffer
+[  57]    01A0: B4 09                                 MOV AH, 9
+[  58]    01A2: CD 21                                 INT 21h
+[  59]        :                                       
+[  60]        :                                       ; Terminare program
+[  61]    01A4: B4 4C                                 MOV AH,4Ch
+[  62]    01A6: CD 21                                 INT 21h
+[  63]        :                                       MAIN ENDP
+[  64]        :                                       
+[  65]        :                                       
+[  66]        :                                       ;------------------------------------------------------------
+[  67]        :                                       ; ConvertASCIIToNumber
+[  68]        :                                       ; Intrare: DX = adresa buffer (format INT 21h, AH=0Ah)
+[  69]        :                                       ; buffer[0] = lungime maxima
+[  70]        :                                       ; buffer[1] = numar caractere introduse (fara CR)
+[  71]        :                                       ; buffer+2 = primul caracter ASCII
+[  72]        :                                       ; Iesire: AX = valoarea numerica in baza 10
+[  73]        :                                       ;------------------------------------------------------------
+[  74]    01A8:                                       ConvertASCIIToNumber PROC
+[  75]    01A8: 53                                    PUSH BX
+[  76]    01A9: 51                                    PUSH CX
+[  77]    01AA: 56                                    PUSH SI
+[  78]        :                                       
+[  79]    01AB: 8B F2                                 MOV SI, DX
+[  80]    01AD: 8A 4C 01                              MOV CL,[SI+1]      ; CL = numarul de caractere citite
+[  81]    01B0: 83 C6 02                              ADD SI,2           ; SI pointeaza la primul caracter introdus
+[  82]        :                                       
+[  83]    01B3: 33 C0                                 XOR AX,AX          ; AX = 0 (valoarea curenta)
+[  84]    01B5: BB 0A 00                              MOV BX,10          ; Baza 10
+[  85]        :                                       
+[  86]    01B8:                                       ConvLoop:
+[  87]    01B8: 80 F9 00                              CMP CL,0
+[  88]    01BB: 74 14                                 JE DoneConv
+[  89]        :                                       
+[  90]        :                                       ; Citim caracterul si il transformam in cifra
+[  91]    01BD: 8A 14                                 MOV DL,[SI]         ; DL = caracterul ASCII
+[  92]    01BF: 80 EA 30                              SUB DL,'0'          ; DL = cifra (0-9)
+[  93]    01C2: 8A EA                                 MOV CH,DL           ; salvam cifra in CH (CL/CH = 16-bit), CH=DL, CL ramane pentru count
+[  94]        :                                       
+[  95]        :                                       ; AX = AX * 10
+[  96]    01C4: F7 E3                                 MUL BX              ; AX = AX*10 (DX:AX = AX*10)
+[  97]        :                                       ; acum adaugam cifra la AX
+[  98]    01C6: 8A D5                                 MOV DL,CH           ; restauram cifra din CH in DL
+[  99]    01C8: B6 00                                 MOV DH,0            ; DX = 00DL
+[ 100]    01CA: 03 C2                                 ADD AX,DX           ; AX = AX + cifra
+[ 101]        :                                       
+[ 102]    01CC: 46                                    INC SI
+[ 103]    01CD: FE C9                                 DEC CL
+[ 104]    01CF: EB E7                                 JMP ConvLoop
+[ 105]        :                                       
+[ 106]    01D1:                                       DoneConv:
+[ 107]    01D1: 5E                                    POP SI
+[ 108]    01D2: 59                                    POP CX
+[ 109]    01D3: 5B                                    POP BX
+[ 110]    01D4: C3                                    RET
+[ 111]        :                                       ConvertASCIIToNumber ENDP
+[ 112]        :                                       
+[ 113]        :                                       
+[ 114]        :                                       ;------------------------------------------------------------
+[ 115]        :                                       ; ConvertNumberToASCII
+[ 116]        :                                       ; Intrare: AX = numar
+[ 117]        :                                       ; Iesire: outBuffer = numar ca sir ASCII urmat de '$'
+[ 118]        :                                       ;        outBuffer contine pana la 5 cifre + '$'
+[ 119]        :                                       ;------------------------------------------------------------
+[ 120]    01D5:                                       ConvertNumberToASCII PROC
+[ 121]    01D5: 50                                    PUSH AX
+[ 122]    01D6: 53                                    PUSH BX
+[ 123]    01D7: 51                                    PUSH CX
+[ 124]    01D8: 52                                    PUSH DX
+[ 125]    01D9: 57                                    PUSH DI
+[ 126]        :                                       
+[ 127]    01DA: BF 51 00                              MOV DI,OFFSET outBuffer
+[ 128]    01DD: BB 0A 00                              MOV BX,10
+[ 129]    01E0: 33 C9                                 XOR CX,CX          ; CX va numara cifrele
+[ 130]    01E2: 33 D2                                 XOR DX,DX
+[ 131]        :                                       
+[ 132]    01E4: 3D 00 00                              CMP AX,0
+[ 133]    01E7: 75 06                                 JNE ExtractDigits
+[ 134]    01E9: C6 05 30                              MOV BYTE PTR [DI],'0'
+[ 135]    01EC: 47                                    INC DI
+[ 136]    01ED: EB 14                                 JMP WriteTerminator
+[ 137]        :                                       
+[ 138]    01EF:                                       ExtractDigits:
+[ 139]    01EF:                                       NextDigit:
+[ 140]    01EF: 33 D2                                 XOR DX,DX
+[ 141]    01F1: F7 F3                                 DIV BX             ; (DX:AX)/BX -> AX=cat, DX=rest(cifra)
+[ 142]    01F3: 52                                    PUSH DX            ; salvam cifra
+[ 143]    01F4: 41                                    INC CX
+[ 144]    01F5: 3D 00 00                              CMP AX,0
+[ 145]    01F8: 75 F5                                 JNE NextDigit
+[ 146]        :                                       
+[ 147]    01FA:                                       WriteDigits:
+[ 148]    01FA: 5A                                    POP DX
+[ 149]    01FB: 80 C2 30                              ADD DL,'0'
+[ 150]    01FE: 88 15                                 MOV [DI],DL
+[ 151]    0200: 47                                    INC DI
+[ 152]    0201: E2 F7                                 LOOP WriteDigits
+[ 153]        :                                       
+[ 154]    0203:                                       WriteTerminator:
+[ 155]    0203: C6 05 24                              MOV [DI],'$'
+[ 156]        :                                       
+[ 157]    0206: 5F                                    POP DI
+[ 158]    0207: 5A                                    POP DX
+[ 159]    0208: 59                                    POP CX
+[ 160]    0209: 5B                                    POP BX
+[ 161]    020A: 58                                    POP AX
+[ 162]    020B: C3                                    RET
+[ 163]        :                                       ConvertNumberToASCII ENDP
+[ 164]        :                                       
+[ 165]        :                                       END MAIN
+[ 166]        :                                       
+[ 167]        :                                       
+ 
+===================================================================================================
+ 
+EXE HEADER - bytes from 0000 to 01FF inclusive.
+
+0000: 4D      -   exe signature (M)
+0001: 5A      -   exe signature (Z)
+0002: 0C      -   bytes on last page (l.byte)
+0003: 00      -   bytes on last page (h.byte)
+0004: 03      -   512 byte pages in file (l.byte)
+0005: 00      -   512 byte pages in file (h.byte)
+0006: 01      -   relocations (l.byte)
+0007: 00      -   relocations (h.byte)
+0008: 20      -   paragraphs in header (l.byte)
+0009: 00      -   paragraphs in header (h.byte)
+000A: 00      -   minimum memory (l.byte)
+000B: 00      -   minimum memory (h.byte)
+000C: FF      -   maximum memory (l.byte)
+000D: FF      -   maximum memory (h.byte)
+000E: 00      -   SS - stack segment (l.byte)
+000F: 00      -   SS - stack segment (h.byte)
+0010: 00      -   SP - stack pointer (l.byte)
+0011: 01      -   SP - stack pointer (h.byte)
+0012: 8C      -   check sum (l.byte)
+0013: EE      -   check sum (h.byte)
+0014: 00      -   IP - instruction pointer (l.byte)
+0015: 00      -   IP - instruction pointer (h.byte)
+0016: 16      -   CS - code segment (l.byte)
+0017: 00      -   CS - code segment (h.byte)
+0018: 1E      -   relocation table adress (l.byte)
+0019: 00      -   relocation table adress (h.byte)
+001A: 00      -   overlay number (l.byte)
+001B: 00      -   overlay number (h.byte)
+001C: 01      -   signature (l.byte)
+001D: 00      -   signature (h.byte)
+001E: 01      -   relocation table - offset inside segment (l.byte)
+001F: 00      -   relocation table - offset inside segment (h.byte)
+0020: 16      -   relocation table - segment anchor (l.byte)
+0021: 00      -   relocation table - segment anchor (h.byte)
+0022 to 01FF  -   reserved relocation area  (00) 
+
+
+
+
+===================================================================================================

@@ -1,0 +1,13 @@
+org 100h          ; Program pentru EMU8086
+mov ax, 0x1234    ; AX = 4660 (decimal)
+mov cx, 0x0010    ; CX = 16 (decimal)
+mul cx            ; AX = AX * CX, rezultat în DX:AX
+
+; Afi?area rezultatului din DX ?i AX (op?ional)
+mov ah, 4Ch       ; Terminare program
+int 21h
+
+
+
+
+; [SOURCE]: C:\emu8086\MySource\2roMULcxMAREsimplu.asm

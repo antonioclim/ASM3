@@ -1,0 +1,170 @@
+.MODEL SMALL
+.STACK 100h
+
+.DATA
+buffer1 DB 6,0,0,0,0,0,0  ; primul numar (max 5 cifre)
+buffer2 DB 6,0,0,0,0,0,0  ; al doilea numar
+msg1 DB "Introdu primul numar: $"
+msg2 DB "Introdu al doilea numar: $"
+msg3 DB "Rezultatul este: $"
+outBuffer DB 6 DUP(?), '$'
+
+.CODE
+MAIN PROC
+MOV AX, @DATA
+MOV DS, AX
+
+; Afisare mesaj + citire primul numar
+MOV DX, OFFSET msg1
+MOV AH, 9
+INT 21h
+
+MOV DX, OFFSET buffer1
+MOV AH, 0Ah
+INT 21h
+
+; Convertim din ASCII in numar intreg (AX)
+MOV DX, OFFSET buffer1
+CALL ConvertASCIIToNumber
+MOV BX, AX  ; salvam primul numar in BX
+
+; Afisare mesaj + citire al doilea numar
+MOV DX, OFFSET msg2
+MOV AH, 9
+INT 21h
+
+MOV DX, OFFSET buffer2
+MOV AH, 0Ah
+INT 21h
+
+; Convertim din ASCII in numar intreg (AX)
+MOV DX, OFFSET buffer2
+CALL ConvertASCIIToNumber
+ADD AX, BX   ; AX = AX + BX (suma finala)
+
+; Convertim numarul din AX in ASCII (outBuffer)
+PUSH AX
+CALL ConvertNumberToASCII
+POP AX
+
+; Afisare mesaj rezultat
+MOV DX, OFFSET msg3
+MOV AH, 9
+INT 21h
+
+; Afisare rezultat
+MOV DX, OFFSET outBuffer
+MOV AH, 9
+INT 21h
+
+; Terminare program
+MOV AH,4Ch
+INT 21h
+MAIN ENDP
+
+
+;------------------------------------------------------------
+; ConvertASCIIToNumber
+; Intrare: DX = adresa buffer (format INT 21h, AH=0Ah)
+; buffer[0] = lungime maxima
+; buffer[1] = numar caractere introduse (fara CR)
+; buffer+2 = primul caracter ASCII
+; Iesire: AX = valoarea numerica in baza 10
+;------------------------------------------------------------
+ConvertASCIIToNumber PROC
+PUSH BX
+PUSH CX
+PUSH SI
+
+MOV SI, DX
+MOV CL,[SI+1]      ; CL = numarul de caractere citite
+ADD SI,2           ; SI pointeaza la primul caracter introdus
+
+XOR AX,AX          ; AX = 0 (valoarea curenta)
+MOV BX,10          ; Baza 10
+
+ConvLoop:
+CMP CL,0
+JE DoneConv
+
+; Citim caracterul si il transformam in cifra
+MOV DL,[SI]         ; DL = caracterul ASCII
+SUB DL,'0'          ; DL = cifra (0-9)
+MOV CH,DL           ; salvam cifra in CH (CL/CH = 16-bit), CH=DL, CL ramane pentru count
+
+; AX = AX * 10
+MUL BX              ; AX = AX*10 (DX:AX = AX*10)
+; acum adaugam cifra la AX
+MOV DL,CH           ; restauram cifra din CH in DL
+MOV DH,0            ; DX = 00DL
+ADD AX,DX           ; AX = AX + cifra
+
+INC SI
+DEC CL
+JMP ConvLoop
+
+DoneConv:
+POP SI
+POP CX
+POP BX
+RET
+ConvertASCIIToNumber ENDP
+
+
+;------------------------------------------------------------
+; ConvertNumberToASCII
+; Intrare: AX = numar
+; Iesire: outBuffer = numar ca sir ASCII urmat de '$'
+;        outBuffer contine pana la 5 cifre + '$'
+;------------------------------------------------------------
+ConvertNumberToASCII PROC
+PUSH AX
+PUSH BX
+PUSH CX
+PUSH DX
+PUSH DI
+
+MOV DI,OFFSET outBuffer
+MOV BX,10
+XOR CX,CX          ; CX va numara cifrele
+XOR DX,DX
+
+CMP AX,0
+JNE ExtractDigits
+MOV BYTE PTR [DI],'0'
+INC DI
+JMP WriteTerminator
+
+ExtractDigits:
+NextDigit:
+XOR DX,DX
+DIV BX             ; (DX:AX)/BX -> AX=cat, DX=rest(cifra)
+PUSH DX            ; salvam cifra
+INC CX
+CMP AX,0
+JNE NextDigit
+
+WriteDigits:
+POP DX
+ADD DL,'0'
+MOV [DI],DL
+INC DI
+LOOP WriteDigits
+
+WriteTerminator:
+MOV [DI],'$'
+
+POP DI
+POP DX
+POP CX
+POP BX
+POP AX
+RET
+ConvertNumberToASCII ENDP
+
+END MAIN
+
+
+
+
+; [SOURCE]: C:\emu8086\MySource\ADD2NOKBmycode.asm

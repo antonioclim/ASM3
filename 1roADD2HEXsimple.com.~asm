@@ -1,0 +1,17 @@
+org 100h ; Seteaz? punctul de origine la 0x100. Într-un fi?ier .com, execu?ia începe la aceast? adres?.
+
+mov ax, 0050h ; AX = 0x0050. Ini?ial, nu ?tim con?inutul registrului AX, dar dup? aceast? instruc?iune, AX con?ine exact 80 (decimal).
+
+mov bx, 00FFh ; BX = 0x00FF. Similar, aceasta pune valoarea 255 în BX. Înainte de aceast? instruc?iune, con?inutul lui BX nu era definit pentru program.
+; Acum avem: AX = 0x0050 (80), BX = 0x00FF (255).
+
+add ax, bx ; Efectueaz? AX = AX + BX. AX era 80, BX era 255, deci AX devine 335 în decimal, adic? 0x014F în hex. Dup? aceast? instruc?iune: AX = 0x014F.
+
+mov ah, 4Ch ; Seteaz? AH (partea superioar? a lui AX) la 0x4C. AX a fost modificat, dar acum ne intereseaz? doar AH, deoarece urm?toarea instruc?iune int 21h cite?te func?ia DOS din AH. AH=4Ch înseamn? "terminare program".
+
+int 21h ; Aceasta apeleaz? întreruperea DOS 21h. DOS verific? AH ?i vede func?ia 4Ch, care înseamn? "Terminate Program". Programul se încheie ?i controlul revine la sistem.
+
+
+
+
+; [SOURCE]: C:\emu8086\MySource\1roADD2HEXsimple.asm
